@@ -1,11 +1,16 @@
+require('dotenv').config();
+
 const path = require('path');
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 const errorController = require('./controllers/error');
-const mongoConnect = require('./util/database').mongoConnect;
-const User = require('./models/user');
+const MONGODB_URI = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_CLUSTER}/${process.env.MONGO_DB_NAME}?retryWrites=true&w=majority`;
+const User = require("./models/user");
+
+// const User = require('./models/user');
 
 const app = express();
 
@@ -23,7 +28,7 @@ let defaultUserId;
 app.use((req, res, next) => {
   User.findById(defaultUserId)
     .then(user => {
-      req.user = new User(user.name, user.email, user.cart, user._id);
+      req.user = user;
       next();
     })
     .catch(err => console.log(err));
@@ -34,19 +39,19 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
-mongoConnect((client) => {
-  User.findOne()
-    .then(user => {
-      if (user) {
-        defaultUserId = user._id;
-        return;
-      }
-      const newUser = new User('Max', 'max@test.com', { items: [] });
-      return newUser.save().then(result => {
-        defaultUserId = result.insertedId;
+mongoose
+  .connect(MONGODB_URI)
+  .then((result) => {
+      User.findOne().then(user => {
+          if (!user) {
+              const user = new User({
+                  name: "Staszord",
+                  email: "staszord@test.com",
+                  cart: { items: [] }
+              });
+              user.save();
+          }
       });
-    })
-    .then(() => {
       app.listen(3000);
-    });
-});
+  })
+  .catch(err => console.log(err));
