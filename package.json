@@ -14,8 +14,11 @@
     "nodemon": "^1.18.3"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "body-parser": "^1.18.3",
-    "connect-mongodb-session": "^5.0.0",
+    "connect-flash": "^0.1.1",
+    "connect-mongo": "^6.0.0",
+    "csrf-sync": "^4.2.1",
     "dotenv": "^17.4.2",
     "ejs": "^2.6.1",
     "express": "^4.16.3",
