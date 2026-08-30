@@ -12,6 +12,7 @@ const flash = require('connect-flash');
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
+const uploadProductImage = require('./middleware/file-upload');
 
 const MONGODB_URI = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_CLUSTER}/${process.env.MONGO_DB_NAME}`;
 
@@ -42,6 +43,11 @@ app.use(
     store: store
   })
 );
+// multer must parse multipart/form-data bodies before CSRF validation
+// runs, since bodyParser.urlencoded() cannot populate req.body for
+// multipart requests and csrfSynchronisedProtection reads req.body._csrf.
+app.use('/admin/add-product', uploadProductImage);
+app.use('/admin/edit-product', uploadProductImage);
 app.use(csrfSynchronisedProtection);
 app.use(flash());
 
@@ -77,13 +83,14 @@ app.get("/500", errorController.get500);
 app.use(errorController.get404);
 
 app.use((error, req, res, next) => {
+    console.error(error);
     res.redirect('/500');
 });
 
 mongoose
   .connect(MONGODB_URI)
   .then(result => {
-    app.listen(3000);
+    app.listen(process.env.PORT || 3000);
   })
   .catch(err => {
     console.log(err);
